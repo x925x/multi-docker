@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t leolins/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true leolins/react-test npm test
+
+after_success:
+  - docker build -t leolins/multi-client ./client
+  - docker build -t leolins/multi-nginx ./nginx
+  - docker build -t leolins/multi-server ./server
+  - docker build -t leolins/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-sdtin
+  #Push those images to docker-hub
+  - docker push leolins/multi-client
+  - docker push leolins/multi-nginx
+  - docker push leolins/multi-server
+  - docker push leolins/multi-worker
